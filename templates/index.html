@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#launch">Profile Analyzer</a>
+      <nav id="nav-links" class="nav-links" aria-label="Sections" hidden>
+        <a href="#overview">Overview</a>
+        <a href="#personality">Personality</a>
+        <a href="#authenticity">Authenticity</a>
+        <a href="#posts">Posts</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="launch" class="launch" aria-labelledby="launch-title">
+      <h1 id="launch-title">Analyze a public Instagram profile</h1>
+      <p class="muted">Collect its data and posts, estimate a personality hypothesis, and check whether its audience looks organic.</p>
+      <form id="scrape-form" class="panel">
+        <div class="fields">
+          <label class="field grow">Username
+            <input id="username" type="text" required placeholder="profile_name" autocomplete="off" spellcheck="false" pattern="@?[A-Za-z0-9._]{1,30}">
+          </label>
+          <label class="field">Posts
+            <input id="posts" type="number" min="1" max="200" value="50">
+          </label>
+          <label class="field" title="Posts opened one by one to read caption, likes and comments (0 to skip)">Detailed posts
+            <input id="details" type="number" min="0" max="30" value="10">
+          </label>
+          <button id="scrape-button" class="primary" type="submit">Scrape profile</button>
+        </div>
+        <label class="check"><input id="show-browser" type="checkbox" checked> Show the browser window while scraping</label>
+        <progress id="scrape-bar" hidden></progress>
+        <p id="scrape-status" class="status" role="status"></p>
+      </form>
+    </section>
+
+    <p id="empty" class="muted" hidden>No data yet. Scrape a profile above and the results will appear here.</p>
+
+    <div id="results" hidden>
+      <section id="overview" aria-label="Overview">
+        <header>
+          <h2 id="handle" class="handle"></h2>
+          <p id="bio" class="bio"></p>
+          <p id="counts" class="counts"></p>
+          <p id="meta" class="meta"></p>
+        </header>
+
+        <div class="insight-grid">
+          <div class="card">
+            <h3>Content mix</h3>
+            <div id="mix" class="mix"></div>
+            <p id="mix-legend" class="muted"></p>
+          </div>
+          <div class="card">
+            <h3>Descriptions</h3>
+            <p id="coverage" class="big"></p>
+          </div>
+          <div class="card wide" id="engagement-block" hidden>
+            <h3>Likes and comments</h3>
+            <p id="engagement" class="big"></p>
+          </div>
+          <div class="card wide">
+            <h3>Most used words in captions and descriptions</h3>
+            <ul id="words" class="words"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="personality" aria-labelledby="personality-title">
+        <div class="section-head">
+          <h2 id="personality-title">Personality estimate</h2>
+          <p class="lead">Big Five traits estimated by Gemini from the posts read in detail. Read it as a hypothesis, never as an assessment.</p>
+        </div>
+
+        <form id="analysis-form" class="panel">
+          <label class="check"><input id="consent" type="checkbox" required> The owner of this profile agreed to this analysis</label>
+          <div class="fields">
+            <label class="field" title="Times Gemini is asked. The scores are averaged and their spread shows how consistent the model is">Runs
+              <input id="runs" type="number" min="1" max="5" value="3">
+            </label>
+            <button id="analysis-button" class="primary" type="submit">Analyze with Gemini</button>
+          </div>
+          <progress id="analysis-bar" hidden></progress>
+          <p id="analysis-status" class="status" role="status"></p>
+        </form>
+
+        <div id="analysis-result" hidden>
+          <div class="grid-2">
+            <figure class="card radar-card">
+              <div id="radar"></div>
+              <figcaption id="radar-legend" class="legend"></figcaption>
+            </figure>
+            <article id="conclusion" class="card conclusion" hidden>
+              <h3>Conclusion</h3>
+              <p id="conclusion-headline" class="headline"></p>
+              <div class="field-row">
+                <span class="muted small">Strongest tendencies</span>
+                <div id="conclusion-dominant" class="chips"></div>
+              </div>
+              <p id="conclusion-narrative"></p>
+              <p id="conclusion-caveat" class="caveat"></p>
+              <div class="field-row">
+                <span class="muted small">What it is based on</span>
+                <div id="conclusion-basis" class="chips"></div>
+              </div>
+            </article>
+          </div>
+
+          <h3 class="subhead">Trait by trait</h3>
+          <p class="muted small">The large dot is the average of the runs, the small dots are each run and the shaded band is their range. The line in the middle is the population average.</p>
+          <div id="trait-cards" class="trait-grid"></div>
+
+          <h3 class="subhead">How this estimate was made</h3>
+          <ol id="trail" class="trail"></ol>
+          <p id="analysis-meta" class="meta"></p>
+          <p id="analysis-limits" class="note"></p>
+        </div>
+
+        <details id="validation" class="card" hidden>
+          <summary>Validate with a questionnaire (BFI-10)</summary>
+          <p class="muted">Only the owner of the profile should answer. 1 means disagree strongly and 5 means agree strongly.</p>
+          <form id="bfi-form">
+            <ol id="bfi-items" class="bfi"></ol>
+            <button id="bfi-button" class="primary" type="submit">Compare with the estimate</button>
+            <p id="bfi-status" class="status" role="status"></p>
+          </form>
+          <div id="comparison" hidden></div>
+        </details>
+      </section>
+
+      <section id="authenticity" aria-labelledby="authenticity-title">
+        <div class="section-head">
+          <h2 id="authenticity-title">Audience authenticity</h2>
+          <p class="lead">In a natural population about 30% of follower counts start with the digit 1 and fewer than 5% start with 9 (Benford's law). Bots and bought followers tend to break that pattern.</p>
+        </div>
+
+        <form id="benford-form" class="panel">
+          <p class="muted">Samples the <span id="benford-list">followers of</span> <strong id="benford-profile">the scraped profile</strong>, reads the follower count of each account and compares the first digits with Benford's curve. It needs at least 200 accounts and takes roughly 10 to 15 minutes. Only the numbers are saved, never the usernames.</p>
+          <label class="check"><input id="benford-consent" type="checkbox" required> The owner of this profile agreed to this check</label>
+          <div class="fields">
+            <label class="field">Sample size
+              <input id="benford-sample" type="number" min="200" max="400" value="200">
+            </label>
+            <button id="benford-button" class="primary" type="submit">Run Benford check</button>
+          </div>
+          <progress id="benford-bar" hidden></progress>
+          <p id="benford-status" class="status" role="status"></p>
+        </form>
+
+        <div id="benford-result" hidden>
+          <article id="benford-verdict" class="card verdict">
+            <h3 id="benford-headline"></h3>
+            <p id="benford-explanation"></p>
+            <ul id="benford-notes" class="notes"></ul>
+          </article>
+
+          <div class="grid-2">
+            <figure class="card">
+              <div id="benford-chart"></div>
+              <figcaption class="legend">
+                <span><span class="swatch bar"></span>Observed share</span>
+                <span><span class="swatch ai"></span>Benford curve</span>
+              </figcaption>
+            </figure>
+            <div id="benford-metrics" class="metrics"></div>
+          </div>
+
+          <details class="card">
+            <summary>Digit table</summary>
+            <table id="digit-table" class="compare"></table>
+          </details>
+          <details class="card">
+            <summary>How to read this</summary>
+            <ul class="notes">
+              <li>Each bar is the share of accounts whose follower count starts with that digit. The line is what Benford's law predicts.</li>
+              <li>The chi-square p-value says how likely a gap this large is by chance in a real Benford sample. Below 0.05 is a deviation and below 0.01 is a clear one.</li>
+              <li>The mean deviation is the average gap between bars and line. Compare it with the value expected by chance: with a few hundred accounts even perfect data shows a small gap.</li>
+              <li>The law needs counts that span several orders of magnitude. When they do not, the check is unreliable.</li>
+              <li>Accounts with 0 followers have no first digit, so they are left out of the test, but their share is shown because it is a bot signal of its own.</li>
+              <li>A deviation is a reason to look closer, never proof that an account is fake.</li>
+            </ul>
+          </details>
+          <p id="benford-meta" class="meta"></p>
+        </div>
+      </section>
+
+      <section id="posts" aria-labelledby="posts-title">
+        <div class="section-head">
+          <h2 id="posts-title">Posts</h2>
+        </div>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search captions and descriptions" aria-label="Search captions and descriptions">
+          <div id="filters" role="group" aria-label="Filter by type"></div>
+        </div>
+        <p id="result-count" class="muted"></p>
+        <ul id="post-list" class="post-list"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='charts.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
