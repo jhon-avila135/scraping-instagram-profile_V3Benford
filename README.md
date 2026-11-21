@@ -10,7 +10,7 @@ Quick start
 Requires Python 3.9 or newer.
 
 bash
-git clone https://github.com/jhon-avilat/scraping-instagram-profile_V3Benford.git
+git clone https://github.com/jhon-avila135/scraping-instagram-profile_V3Benford.git
 cd scraping-instagram-profile_V3Benford
 
 python -m venv venv
@@ -87,4 +87,4 @@ Nigrini, M. (2012). Benford's Law: Applications for Forensic Accounting, Auditin
 Rammstedt, B., & John, O. P. (2007). Measuring personality in one minute or less: a 10-item short version of the Big Five Inventory.
 License
 
-MIT. Copyright (c) Jhon Avila (@jhon-avilat).
+MIT. Copyright (c) Jhon Avila (@jhon-avila135).
